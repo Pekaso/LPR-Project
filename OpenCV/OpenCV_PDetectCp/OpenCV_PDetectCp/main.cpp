@@ -22,10 +22,8 @@ int main(int argc, const char * argv[])
     for (int i = 1; i < 35; i++) {
         std::sprintf(tmpname, "/Users/Kousuke/LPR-Project/OpenCV/OpenCV_PDetectCp/OpenCV_PDetectCp/Template/%d.bmp",i);
         tmp_chr[i] = cv::imread(tmpname, CV_LOAD_IMAGE_GRAYSCALE);
-        //cv::Canny(tmp_chr[i], tmp_chr[i], 0, 255);
-        //cv::adaptiveThreshold(tmp_chr[i], tmp_chr[i], 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 5, 5);
     }
-    
+
     //Load image
     src_img = cv::imread("/Users/Kousuke/LPR-Project/OpenCV/OpenCV_PDetectCp/OpenCV_PDetectCp/DetectSample/detectsample50.bmp");
     if(src_img.empty()){
@@ -138,7 +136,7 @@ int main(int argc, const char * argv[])
     }
     cv::namedWindow("dst_img3", CV_WINDOW_AUTOSIZE);
     cv::imshow("dst_img3", dst_img3);
-    cv::waitKey();
+    //cv::waitKey();
     
     cv::Mat result;
     double tmpdata;
@@ -152,35 +150,59 @@ int main(int argc, const char * argv[])
         for (int i = 1; i < 35; i++) {
             cv::matchTemplate(chr_img[j], tmp_chr[i], result, CV_TM_CCOEFF_NORMED);
             tmpdata = result.at<float>(0,0);
-            //std::cout << j << ", " << i << ", " << tmpdata << std::endl;
+            std::cout << j << ", " << i << ", " << tmpdata << std::endl;
             
             if (tmpdata > tmpmax) {
                 tmpmax = tmpdata;
                 tmploc[j] = i;
             }
         }
+        if (tmpmax < 0.5) {
+            tmploc[j] = 0;
+        }
         tmpmax = 0;
     }
     
     //Convert character to string
+    /*
+    output[j] = 
+     
+     0: Can't read or Wrong number.
+     1~10: 1, 2,..., 9, 10,
+     11~18: A, B,..., G, H,
+     19~23: J, K,..., M, N,
+     24~34: P, Q,..., Y, Z,
+     
+     This program excluded "I" and "O" of alphabet.
+    */
+    
     for (int j = cnt; j > 0; j--) {
         output[j] = tmploc[j];
         if (output[j] > 10) {
+            //19~23
             if (output[j] > 18 && output[j] < 24) {
                 output[j] = 'A' + tmploc[j]-10;
+            //24~34
             }else if (output[j] > 23){
                 output[j] = 'A' + tmploc[j]-9;
             }else{
+            //11~18
             output[j] = 'A' + tmploc[j]-11;
             }
+            //10
         }else if (tmploc[j] == 10){
             output[j] = 48;
+            //1~9
         }else{
             output[j] = tmploc[j] + 48;
         }
-        out_plate += output[j];
+        //0
+        if (tmploc[j] > 0) {
+            out_plate += output[j];
+        }
     }
-    std::cout << "Result = " << "'" << out_plate << "'" << std::endl << "Recognize end";
+    //Output strings of license plate
+    std::cout << std::endl << "Result = " << "'" << out_plate << "'" << std::endl << "Recognize end" << std::endl;
     cv::waitKey();
 }
 
