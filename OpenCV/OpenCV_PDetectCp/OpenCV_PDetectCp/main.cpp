@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -26,7 +27,7 @@ int main(int argc, const char * argv[])
     }
     
     //Load image
-    src_img = cv::imread("/Users/Kousuke/LPR-Project/OpenCV/OpenCV_PDetectCp/OpenCV_PDetectCp/DetectSample/detectsample4.bmp");
+    src_img = cv::imread("/Users/Kousuke/LPR-Project/OpenCV/OpenCV_PDetectCp/OpenCV_PDetectCp/DetectSample/detectsample50.bmp");
     if(src_img.empty()){
         return -1; //If image can't loaded
     }
@@ -102,7 +103,7 @@ int main(int argc, const char * argv[])
     cv::findContours(dst_img4, strage, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
     
     int cnt = 0;
-    int offs2 = 2;
+    int offs2 = 1;
     char name[10];
     
     itc = strage.begin();
@@ -139,36 +140,47 @@ int main(int argc, const char * argv[])
     cv::imshow("dst_img3", dst_img3);
     cv::waitKey();
     
-    /*
-    double result[cnt][34];
-    //char text[16];
+    cv::Mat result;
+    double tmpdata;
+    double tmpmax = 0;
+    int tmploc[cnt];
+    char output[10];
+    std::string out_plate;
     
-    for (int j = 1; j < cnt+1; j++) {
-        cv::findContours(chr_img[j], chr_str, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-        for (int i = 1; i < 35; i++) {
-            cv::findContours(tmp_chr[i], tmp_str, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-            result[j][i] = cv::matchShapes(tmp_str, chr_str, CV_CONTOURS_MATCH_I3, 0);
-            //std::sprintf(text,"%.5f", result[j][i]);
-            std::cout << j << "," << i << "," << result[j][i] << std::endl;
-        }
-        cv::waitKey();
-    }
-    */
-    /*
-    cv::Scalar tmpscalar;
-    double result[cnt][34];
-    //char text[16];
-    cv::Mat tmp;
+    //Template matching
     for (int j = 1; j < cnt+1; j++) {
         for (int i = 1; i < 35; i++) {
-            cv::subtract(chr_img[j], tmp_chr[i], tmp);
-            cv::pow(tmp, 2, tmp);
-            tmpscalar = cv::sum(tmp);
-            result[j][i] = tmpscalar.val[0];
-            std::cout << j << "," << i << "," << result[j][i] << std::endl;
+            cv::matchTemplate(chr_img[j], tmp_chr[i], result, CV_TM_CCOEFF_NORMED);
+            tmpdata = result.at<float>(0,0);
+            //std::cout << j << ", " << i << ", " << tmpdata << std::endl;
+            
+            if (tmpdata > tmpmax) {
+                tmpmax = tmpdata;
+                tmploc[j] = i;
+            }
         }
+        tmpmax = 0;
     }
+    
+    //Convert character to string
+    for (int j = cnt; j > 0; j--) {
+        output[j] = tmploc[j];
+        if (output[j] > 10) {
+            if (output[j] > 18 && output[j] < 24) {
+                output[j] = 'A' + tmploc[j]-10;
+            }else if (output[j] > 23){
+                output[j] = 'A' + tmploc[j]-9;
+            }else{
+            output[j] = 'A' + tmploc[j]-11;
+            }
+        }else if (tmploc[j] == 10){
+            output[j] = 48;
+        }else{
+            output[j] = tmploc[j] + 48;
+        }
+        out_plate += output[j];
+    }
+    std::cout << "Result = " << "'" << out_plate << "'" << std::endl << "Recognize end";
     cv::waitKey();
-    */
 }
 
