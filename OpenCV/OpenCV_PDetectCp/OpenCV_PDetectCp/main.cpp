@@ -15,6 +15,8 @@ int main(int argc, const char * argv[])
     std::vector<std::vector<cv::Point>> tmp_str;
     std::vector<std::vector<cv::Point>>::iterator itc;
     
+    int snum;
+    
     cv::Mat tmp_chr[35];
     char tmpname[100];
     
@@ -23,9 +25,21 @@ int main(int argc, const char * argv[])
         std::sprintf(tmpname, "/Users/Kousuke/LPR-Project/OpenCV/OpenCV_PDetectCp/OpenCV_PDetectCp/Template/%d.bmp",i);
         tmp_chr[i] = cv::imread(tmpname, CV_LOAD_IMAGE_GRAYSCALE);
     }
+    
+    std::cout << "Input sample No. (1~50)" << std::endl;
+    std::cin >> snum;
+    
+    if (snum >= 1 && snum <= 50) {
+    }else{
+        std::cout << "Illegal No." << std::endl;
+        return -1;
+    }
+    
+    char inpname[100];
 
     //Load image
-    src_img = cv::imread("/Users/Kousuke/LPR-Project/OpenCV/OpenCV_PDetectCp/OpenCV_PDetectCp/DetectSample/detectsample50.bmp");
+    std::sprintf(inpname, "/Users/Kousuke/LPR-Project/OpenCV/OpenCV_PDetectCp/OpenCV_PDetectCp/DetectSample/detectsample%d.bmp", snum);
+    src_img = cv::imread(inpname);
     if(src_img.empty()){
         return -1; //If image can't loaded
     }
@@ -48,7 +62,7 @@ int main(int argc, const char * argv[])
     //Find the contours in image
     cv::findContours(dst_img2, strage, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_TC89_KCOS);
     
-    int offs = 4;
+    int offs = 4; //Offset of crop to use in nest process
     
     //Search area of the plate with the correct aspect ratio
     for (int i = 0; i < strage.size(); i++) {
@@ -120,7 +134,7 @@ int main(int argc, const char * argv[])
                 if (prate >0 && prate <1 && itc -> size() > 30){
                     
                     //Crop and resize the character to match the template.
-                    cnt++;
+                    cnt++; //Count up for character number to decide order to read in character recognition
                     chr_tmp = dst_img3(cv::Rect(rect.x-offs2,rect.y-offs2,rect.width+2*offs2,rect.height+2*offs2));
                     chr_img[cnt] = cv::Mat::zeros(100, 60, CV_8U);
                     cv::resize(chr_tmp, chr_img[cnt], chr_img[cnt].size());
@@ -132,7 +146,7 @@ int main(int argc, const char * argv[])
                     cv::imshow(wname, chr_img[cnt]);
         
         }
-        itc++;
+        itc++; //Count up for next contour
     }
     cv::namedWindow("dst_img3", CV_WINDOW_AUTOSIZE);
     cv::imshow("dst_img3", dst_img3);
